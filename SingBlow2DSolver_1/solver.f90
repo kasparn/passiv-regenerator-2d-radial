@@ -222,7 +222,7 @@ do jj=1,op%maxIte
         !::equal as long as viscous dissipation or other heat generating
         !::mechanisms are involved.
         write(*,*) 'Err',op%convErrHot(jj),op%convErrCold(jj)
-        write(*,*) 'qhot,qcold',tR%qhot(jj),tR%qcold(jj)
+        write(*,*) 'qhot,qcold,Qvisc',tR%qhot(jj),tR%qcold(jj),Qvisc(1,1)*ti%t_end*geo%L*Ac
         if ( op%convErrHot(jj) .le. op%convTol .AND. op%convErrCold(jj) .le. op%convTol ) then
             write(*,*) 'Convergence reached'
             exit
@@ -244,5 +244,27 @@ do i=1,n_timesteps
 enddo
 
 close(14)
+
+open (14, file='Ts.dat',	&
+			           status='unknown', form='unformatted',	&
+			           access='direct', recl=2*geo%nx*geo%nr_sf)
+
+do i=1,n_timesteps
+    write(14,rec=i) tR%Ts(:,:,i)
+enddo
+
+close(14)
+
+open (14, file='Tw.dat',	&
+			           status='unknown', form='unformatted',	&
+			           access='direct', recl=2*geo%nx*geo%nr_w)
+
+do i=1,n_timesteps
+    write(14,rec=i) tR%Tw(:,:,i)
+enddo
+
+close(14)
+
+
 end subroutine SingBSolver
 end module solver
