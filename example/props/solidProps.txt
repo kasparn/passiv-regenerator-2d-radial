@@ -1,0 +1,3 @@
+0	10.5	:T,thermal conductivity (one entry => constant value)
+0	7900	:T,mass density (one entry => constant value)
+0	300	:T,specific heat (one entry => constant value)
