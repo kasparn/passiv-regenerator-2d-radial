@@ -23,7 +23,7 @@
 
 MODULE BEDCORRELATIONS
 use datatypes
-
+use constants
 implicit none
 
 
@@ -115,6 +115,7 @@ kdispAx = kdispAx * fl%kf
 kdispRad = kdispRad * fl%kf
 
 
+
 !the effective solid thermal conductivity
 !the disp parameters should be between 0 and 1 
 !disp = 1 means the full dispersion formulation is taken into account
@@ -123,6 +124,14 @@ sl%kstat = op%dispAx * kstat + (1-op%dispAx) * sl%ks
 !fluid effective thermal conductivity (axially)
 fl%kdispAx = op%dispAx * kdispAx + (1-op%dispAx) * fl%kf 
 fl%kdispRad = op%dispRad * kdispRad + (1-op%dispRad) * fl%kf 
+
+!::The boundary fluid conductivity (either kf or kdispRad)
+if ( op%kfBdry .eq. kfWallBoundaryDisp ) then
+    fl%kfBdry = fl%kdispRad(:,geo%nr_sf)
+elseif ( op%kfBdry .eq. kfWallBoundarykf ) then
+    fl%kfBdry = fl%kf(:,geo%nr_sf)
+endif
+
 !convert it so that it is based on the hydraulic diameter
 corr%Nu = corr%dh/geo%dpar * corr%Nu
 

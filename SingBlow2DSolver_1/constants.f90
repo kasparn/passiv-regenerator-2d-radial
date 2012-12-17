@@ -36,4 +36,6 @@ integer,parameter :: TinConstant=1,TinputFile=2
 
 integer,parameter :: SingleBlowMode=1,PeriodicMode=2
 
+integer,parameter :: kfWallBoundaryDisp=1,kfWallBoundarykf=2
+
 end module constants

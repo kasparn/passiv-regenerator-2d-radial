@@ -255,9 +255,9 @@ elseif ( prof%flowProfile .eq. flowInputFile ) then
     write(*,*) 'Flow profile file,nT'
     write(*,*) prof%profileFile,prof%nT
 endif
-read(11,*) op%axial,op%walls,op%wallsSol,op%dispAx,op%dispRad
-write(*,*) 'axial,walls,wallsSol,dispAx,dispRad'
-write(*,*) op%axial,op%walls,op%wallsSol,op%dispAx,op%dispRad
+read(11,*) op%axial,op%walls,op%wallsSol,op%dispAx,op%dispRad,op%kfBdry
+write(*,*) 'axial,walls,wallsSol,dispAx,dispRad,kfBdry'
+write(*,*) op%axial,op%walls,op%wallsSol,op%dispAx,op%dispRad,op%kfBdry
 
 read(11,*) op%Nuscl,op%viscDiss
 write(*,*) 'Nuscl,Viscous dissipation'

@@ -33,7 +33,7 @@ contains
 !::The matrix assembled is sparse
 !::
 subroutine timestep_sp( dx, dr, r, rup, rdn, nx, nr_sf, nr_w,&
-                        rhof,kfAx,kfRad,cf,rhos,ks,cs,rhow,kw,cw,h,as,&
+                        rhof,kfAx,kfRad,kfBdry,cf,rhos,ks,cs,rhow,kw,cw,h,as,&
                         dt, por, Tf, Ts, Tw, u, hw, Qvisc, Tc, Th, &
                         axial, walls, wallsSol,Tfout, Tsout,Twout )
 real,intent(in) :: as,dt,por,axial,walls,wallsSol,Tc,Th
@@ -43,7 +43,7 @@ real,intent(inout),dimension(nx,nr_sf) :: Tfout,Tsout
 real,intent(in),dimension(nx,nr_w) :: rhow,kw,cw
 real,intent(in),dimension(nx,nr_w) :: Tw
 real,intent(inout),dimension(nx,nr_w) :: Twout
-real,intent(in),dimension(nx) :: hw,dx
+real,intent(in),dimension(nx) :: hw,dx,kfBdry
 real,intent(in),dimension(nr_sf+nr_w) :: dr,r,rup,rdn
 real,dimension(:),allocatable :: A,B,X
 integer,dimension(:),allocatable :: cols,rows
@@ -253,7 +253,7 @@ do i=2,nx-1
                  axial * 2 / ( dx(i) * ( dx(i)/kfAx(i,nr_sf) + dx(i+1)/kfAx(i+1,nr_sf) ) ) + &!conduction to right node
                  axial * 2 / ( dx(i) * ( dx(i)/kfAx(i,nr_sf) + dx(i-1)/kfAx(i-1,nr_sf) ) ) + &!conduction to left node
                  h(i,nr_sf) * as + &!HT btw. solid and fluid
-                 walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(i,1) + dr(nr_sf)/kfRad(i,nr_sf) + 1/hw(i) ) ) !HT with the wall
+                 walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(i,1) + dr(nr_sf)/kfBdry(i) + 1/hw(i) ) ) !HT with the wall
                  
     cols(ind+2) = nx * (nr_sf-1) + i
     
@@ -278,7 +278,7 @@ do i=2,nx-1
     
     !fluid part, HT with the wall
     A( ind+5 ) =&
-        -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(i,1) + dr(nr_sf)/kfRad(i,nr_sf) + 1/hw(i) ) ) !HT with the wall
+        -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(i,1) + dr(nr_sf)/kfBdry(i) + 1/hw(i) ) ) !HT with the wall
     cols(ind+5) = cols(ind+2) + nx*nr_sf + nx
    !convection
    !Left node
@@ -301,7 +301,7 @@ A( ind+1 ) = por * rhof( 1, nr_sf ) * cf( 1, nr_sf ) / dt + &!capacity term
                 2 / ( r(nr_sf) * dr(nr_sf) / rdn(nr_sf) * ( dr(nr_sf)/kfRad(1,nr_sf) + dr(nr_sf-1)/kfRad(1,nr_sf-1) ) ) + &!conduction to node r-dr
                 axial * 2 / ( dx(1) * ( dx(1)/kfAx(1,nr_sf) + dx(1+1)/kfAx(1+1,nr_sf) ) ) + &!conduction to right node
                 h(1, nr_sf) * as + &!HT with the solid                
-                walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(1,1) + dr(nr_sf)/kfRad(1,nr_sf) + 1/hw(1) ) ) !HT with the wall
+                walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(1,1) + dr(nr_sf)/kfBdry(1) + 1/hw(1) ) ) !HT with the wall
 cols(ind+1) = nx * (nr_sf-1) + 1
 !fluid part, lower node
 A( ind ) = &
@@ -317,7 +317,7 @@ A( ind+3 ) = -h(1, nr_sf ) * as
 cols(ind+3) = cols(ind+1) + nx*nr_sf
 
 !fluid part, HT with the wall
-A( ind+4 ) = -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(1,1) + dr(nr_sf)/kfRad(1,nr_sf) + 1/hw(1) ) ) 
+A( ind+4 ) = -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(1,1) + dr(nr_sf)/kfBdry(1) + 1/hw(1) ) ) 
 cols(ind+4) = cols(ind+1) + nx*nr_sf+nx
 
 
@@ -353,7 +353,7 @@ A( ind+2 ) = por * rhof( nx, nr_sf ) * cf( nx, nr_sf ) / dt + &!capacity term
                 2 / ( r(nr_sf) * dr(nr_sf) / rdn(nr_sf) * ( dr(nr_sf)/kfRad(nx,nr_sf) + dr(nr_sf-1)/kfRad(nx,nr_sf-1) ) ) + &!conduction to node r-dr
                 axial * 2 / ( dx(nx) * ( dx(nx)/kfAx(nx,nr_sf) + dx(nx-1)/kfAx(nx-1,nr_sf) ) ) + &!conduction to left node
                 h( nx, nr_sf ) * as + &!HT with the solid
-                walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(nx,1) + dr(nr_sf)/kfRad(nx,nr_sf) + 1/hw(nx) ) ) !HT with the wall
+                walls * 2 / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(nx,1) + dr(nr_sf)/kfBdry(nx) + 1/hw(nx) ) ) !HT with the wall
 cols(ind+2) = nx * nr_sf
 !fluid part, lower node
 A( ind ) = &
@@ -367,7 +367,7 @@ cols(ind+1) = cols(ind+2) - 1
 A( ind+3 ) = -h( nx, nr_sf ) * as 
 cols(ind+3) = cols(ind+2) + nx*nr_sf
 !HT with the wall
-A( ind+4 ) = -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(nx,1) + dr(nr_sf)/kfRad(nx,nr_sf) + 1/hw(nx) ) ) 
+A( ind+4 ) = -2 * walls / ( r(nr_sf) * dr(nr_sf) / rup(nr_sf) * ( dr(nr_sf+1)/kw(nx,1) + dr(nr_sf)/kfBdry(nx) + 1/hw(nx) ) ) 
 cols(ind+4) = cols(ind+2) + nx*nr_sf+nx
 !convection 
 if ( u(nx,nr_sf) .gt. 0 ) then
@@ -826,12 +826,12 @@ jj = nr_sf
 A( ind+2 ) = rhow(1,1) * cw(1,1) / dt + &!capacity term
              2 / ( r(jj+1)*dr(jj+1) / rup(jj+1) * ( dr(jj+1)/kw(1,1) + dr(jj+1+1)/kw(1,1+1) )) + &!conduction to node r+dr           
              axial * 2 / ( dx(1) * ( dx(1)/kw(1,1) + dx(1+1)/kw(1+1,1) ) ) + &!conduction to right node                              
-             walls * 2 / ( r(jj+1)*dr(jj+1) / rdn(jj+1) * ( dr(jj+1-1)/kfRad(1,nr_sf) + dr(jj+1)/kw(1,1) + 1/hw(1) ) ) + &!HT with the fluid
+             walls * 2 / ( r(jj+1)*dr(jj+1) / rdn(jj+1) * ( dr(jj+1-1)/kfBdry(1) + dr(jj+1)/kw(1,1) + 1/hw(1) ) ) + &!HT with the fluid
              wallsSol * 2 / ( r(jj+1)*dr(jj+1) / rdn(jj+1) * ( dr(jj+1-1)/ks(1,nr_sf) + dr(jj+1)/kw(1,1) + 1/hw(1) ) ) !HT with the solid
 cols(ind+2) = 2 * nx*nr_sf + 1
 
 !HT with the fluid
-A( ind ) = -2 * walls / ( r(jj+1)*dr(jj+1) / rdn(jj+1) * ( dr(jj+1-1)/kfRad(1,nr_sf) + dr(jj+1)/kw(1,1) + 1/hw(1) ) ) 
+A( ind ) = -2 * walls / ( r(jj+1)*dr(jj+1) / rdn(jj+1) * ( dr(jj+1-1)/kfBdry(1) + dr(jj+1)/kw(1,1) + 1/hw(1) ) ) 
 cols(ind) = cols(ind+2) - nx * nr_sf - nx
 
 !HT with the solid
@@ -857,12 +857,12 @@ jj = nr_sf
 A( ind+3 ) = rhow( nx, 1 ) * cw( nx, 1 ) / dt + &!capacity term
               2 / ( r(jj+1)*dr(jj+1) / rup(jj+1) * ( dr(jj+1)/kw(nx,1) + dr(jj+1+1)/kw(nx,1+1) )) + &!conduction to node r+dr           
               axial * 2 / ( dx(nx) * ( dx(nx)/kw(nx,1) + dx(nx-1)/kw(nx-1,1) ) ) + &!conduction to left node
-              walls * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj)/kfRad(nx,nr_sf) + dr(jj+1)/kw(nx,1) + 1/hw(nx)) ) + & !HT with the fluid
+              walls * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj)/kfBdry(nx) + dr(jj+1)/kw(nx,1) + 1/hw(nx)) ) + & !HT with the fluid
               wallsSol * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj)/ks(nx,nr_sf) + dr(jj+1)/kw(nx,1) + 1/hw(nx)) ) !HT with the fluid
 cols(ind+3) = 2*nx*nr_sf + nx
 
 !HT with the fluid
-A( ind ) = -2 * walls / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj)/kfRad(nx,nr_sf) + dr(jj+1)/kw(nx,1) + 1/hw(nx)) ) 
+A( ind ) = -2 * walls / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj)/kfBdry(nx) + dr(jj+1)/kw(nx,1) + 1/hw(nx)) ) 
 cols(ind) = cols(ind+3) - nx*nr_sf - nx
 
 !HT with the solid
@@ -894,12 +894,12 @@ do i=2,nx-1
                  2 / ( r(jj+1) * dr(jj+1) / rup(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1+1)/kw(i,1+1) ) ) + &!conduction to node r+dr                 
                  axial * 2 / ( dx(i) * ( dx(i)/kw(i,1) + dx(i+1)/kw(i+1,1) ) ) + &!conduction to right node
                  axial * 2 / ( dx(i) * ( dx(i)/kw(i,1) + dx(i-1)/kw(i-1,1) ) ) + &!conduction to left node
-                 walls * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1-1)/kfRad(i,nr_sf) + 1/hw(i) ) ) + &!HT with the fluid
+                 walls * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1-1)/kfBdry(i) + 1/hw(i) ) ) + &!HT with the fluid
                  wallsSol * 2 / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1-1)/ks(i,nr_sf) + 1/hw(i) ) ) !HT with the fluid
     cols(ind+3) = 2*nx*nr_sf + i
    
    !HT with the fluid
-    A( ind ) = -2 * walls / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1-1)/kfRad(i,nr_sf) + 1/hw(i) ) ) 
+    A( ind ) = -2 * walls / ( r(jj+1) * dr(jj+1) / rdn(jj+1) * ( dr(jj+1)/kw(i,1) + dr(jj+1-1)/kfBdry(i) + 1/hw(i) ) ) 
     cols(ind) = cols(ind+3) - nx * nr_sf - nx
     
     !HT with the solid

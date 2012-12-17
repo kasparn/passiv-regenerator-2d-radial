@@ -26,6 +26,7 @@ implicit none
 
 type fluidProps
 real,dimension(:,:),allocatable :: kf,cf,rhof,muf,kdispAx,kdispRad
+real,dimension(:),allocatable :: kfBdry
 endtype fluidProps
 
 type solidProps
@@ -64,7 +65,7 @@ type opCond
 real :: axial,walls,wallsSol,dispAx,dispRad,Nuscl,viscDiss,Tc,Th
 real :: Tf0,Ts0,Tw0,hw
 real,dimension(:,:),allocatable :: u
-integer :: blowMode
+integer :: blowMode,kfBdry
 integer :: maxIte
 real :: convTol
 real,dimension(:),allocatable :: convErrHot,convErrCold

@@ -99,6 +99,7 @@ elseif ( op%blowMode .eq. PeriodicMode ) then
 endif
 !Allocate the property arrays
 allocate( flProps%kf(nx,nr_sf),flProps%kdispAx(nx,nr_sf),flProps%kdispRad(nx,nr_sf) )
+allocate( flProps%kfBdry(nx) );
 allocate( flProps%cf(nx,nr_sf),flProps%rhof(nx,nr_sf),flProps%muf(nx,nr_sf) )
 allocate( slProps%ks(nx,nr_sf),slProps%kstat(nx,nr_sf),slProps%cs(nx,nr_sf),slProps%rhos(nx,nr_sf) )
 allocate( wlProps%kw(nx,nr_w),wlProps%cw(nx,nr_w),wlProps%rhow(nx,nr_w) )
@@ -178,8 +179,9 @@ do jj=1,op%maxIte
             Qvisc(:,j) = op%viscDiss * abs( bedCorr%dpdx * geo%dx * mdot(i) / &
             flProps%rhof(:,1) ) / ( geo%dx * pi * geo%Rad**2 ) 
         enddo
-        !heat transfer coefficient
+                
         
+        !heat transfer coefficient        
         h = bedCorr%Nu * flProps%kf / bedCorr%dh
         !NTU = mean(mean( h * as * vol / ( mdot0 * cf ) ) ) 
         !Ref = mean(mean(Ref)) 
@@ -187,8 +189,8 @@ do jj=1,op%maxIte
         
         call timestep_sp( geo%dx, geo%dr, geo%r, geo%rup, geo%rdn, &
                        geo%nx, geo%nr_sf, geo%nr_w,&
-                       flProps%rhof,flProps%kdispAx,flProps%kdispRad,flProps%cf,&
-                       slProps%rhos,slProps%kstat,slProps%cs,&
+                       flProps%rhof,flProps%kdispAx,flProps%kdispRad,flProps%kfBdry, &
+                       flProps%cf,slProps%rhos,slProps%kstat,slProps%cs,&
                        wlProps%rhow,wlProps%kw,wlProps%cw,&
                        h,bedCorr%as,ti%dt, geo%por, &
                        tR%Tf(:,:,i), tR%Ts(:,:,i), tR%Tw(:,:,i), &
@@ -200,12 +202,15 @@ do jj=1,op%maxIte
         tR%TfHout(i) = sum( tR%Tf(nx,:,i+1) * 2 * pi * geo%r(1:nr_sf) * geo%dr(1:nr_sf) ) / Ac  
         tR%TfCout(i) = sum( tR%Tf(1,:,i+1) * 2 * pi * geo%r(1:nr_sf) * geo%dr(1:nr_sf) ) / Ac  
         ti%t(i+1) = ti%t(i) + ti%dt
+                
+        
         if ( mdot(i) .gt. 0 ) then
-            tR%qhot(jj) = tR%qhot(jj) + mdot(i) * (tR%TfHout(i) - op%Tc) * flProps%cf(nx,1)*ti%dt
+            tR%qhot(jj) = tR%qhot(jj) + mdot(i) * tR%TfHout(i) * flProps%cf(nx,1)*ti%dt                        
+            
             cnt1 = cnt1 + 1
             mdot1 = mdot1 + mdot(i)
         elseif ( mdot(i) .lt. 0 ) then
-            tR%qcold(jj) = tR%qcold(jj) + mdot(i) * (op%Th - tR%TfCout(i)) * flProps%cf(1,1)*ti%dt
+            tR%qcold(jj) = tR%qcold(jj) + mdot(i) * tR%TfCout(i) * flProps%cf(1,1)*ti%dt
             cnt2 = cnt2 + 1
             mdot2 = mdot2 + mdot(i)
         endif
@@ -232,6 +237,8 @@ do jj=1,op%maxIte
         
     endif
     write(*,*) 'Iteration',jj,op%maxIte
+    
+    
     
 enddo
 
