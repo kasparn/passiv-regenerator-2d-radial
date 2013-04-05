@@ -60,6 +60,7 @@ integer :: cnt1,cnt2
 
 !!First setup the grid
 ret = gridFunc( geo )
+
 !dV = dx(1) * 2 * pi * r * dr 
 nx = geo%nx  !grid points in the x-direction
 nr_sf = geo%nr_sf !grid points in the radial direction in the fluid and solid domain
@@ -97,6 +98,8 @@ elseif ( op%blowMode .eq. PeriodicMode ) then
     enddo
     
 endif
+
+
 !Allocate the property arrays
 allocate( flProps%kf(nx,nr_sf),flProps%kdispAx(nx,nr_sf),flProps%kdispRad(nx,nr_sf) )
 allocate( flProps%kfBdry(nx) );
@@ -171,8 +174,7 @@ do jj=1,op%maxIte
         !ret = velocityFunc( op, geo )
         !Nusselt number and pressure drop
         ret = bedFunc( geo, op, flProps, slProps, ti, bedCorr )
-        bedCorr%Nu = bedCorr%Nu * op%Nuscl 
-           
+        bedCorr%Nu = bedCorr%Nu * op%Nuscl            
             
         do j=1,nr_sf
             !viscous dissipation at i and per m^3
@@ -196,14 +198,12 @@ do jj=1,op%maxIte
                        tR%Tf(:,:,i), tR%Ts(:,:,i), tR%Tw(:,:,i), &
                        op%u, hw, Qvisc, Tc(i), Th(i), &
                        op%axial, op%walls, op%wallsSol,tR%Tf(:,:,i+1), tR%Ts(:,:,i+1), tR%Tw(:,:,i+1)) 
-       
-
-    !get the <Tf(nx)> as a function of time
+               
+        !get the <Tf(nx)> as a function of time
         tR%TfHout(i) = sum( tR%Tf(nx,:,i+1) * 2 * pi * geo%r(1:nr_sf) * geo%dr(1:nr_sf) ) / Ac  
         tR%TfCout(i) = sum( tR%Tf(1,:,i+1) * 2 * pi * geo%r(1:nr_sf) * geo%dr(1:nr_sf) ) / Ac  
         ti%t(i+1) = ti%t(i) + ti%dt
-                
-        
+                        
         if ( mdot(i) .gt. 0 ) then
             tR%qhot(jj) = tR%qhot(jj) + mdot(i) * tR%TfHout(i) * flProps%cf(nx,1)*ti%dt                        
             
@@ -213,12 +213,12 @@ do jj=1,op%maxIte
             tR%qcold(jj) = tR%qcold(jj) + mdot(i) * tR%TfCout(i) * flProps%cf(1,1)*ti%dt
             cnt2 = cnt2 + 1
             mdot2 = mdot2 + mdot(i)
-        endif
+        endif        
     enddo
     write(*,*) 'Flow balanced?',cnt1,cnt2
     write(*,*) mdot1,mdot2
     
-    if ( jj .gt. 1 ) then
+    if ( jj .gt. 1 .and. op%blowMode .eq. PeriodicMode ) then
         op%convErrHot(jj) = abs( (tR%qhot(jj) - tR%qhot(jj-1))/tR%qhot(jj-1) )
         op%convErrCold(jj) = abs( (tR%qcold(jj) - tR%qcold(jj-1))/tR%qcold(jj-1) )
         
@@ -234,9 +234,9 @@ do jj=1,op%maxIte
         elseif ( jj .eq. op%maxIte ) then
             write(*,*) 'Convergence was not reached after max. nr. of iterations'
         endif
-        
+        write(*,*) 'Iteration',jj,op%maxIte    
     endif
-    write(*,*) 'Iteration',jj,op%maxIte
+    
     
     
     

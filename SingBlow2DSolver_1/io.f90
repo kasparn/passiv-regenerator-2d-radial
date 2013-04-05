@@ -321,6 +321,8 @@ if ( op%blowMode .eq. PeriodicMode ) then
     read(11,*) op%convTol,op%maxIte
     write(*,*) 'Convergence tolerance, max. nr. iterations'
     write(*,*) op%convTol,op%maxIte
+else
+    op%maxIte = 1
 endif
 
 close(11)

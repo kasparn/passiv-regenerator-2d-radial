@@ -1,10 +1,10 @@
 150,10,10		:Grid resolution (nx, nr_sf, nr_w)
-0.1,0.01,0.001			:L, R and Wt
+0.05,0.01,0.001			:L, R and Wt
 1				:GeomType (1==Spheres, others not defined yet)
 0.36,0.0005			:Bed porosity, sphere diameter
 1    				:flowprofile (1=box,2=file)
 0.01				:mdot (kg/s)
-1,1,0,1,0				:axial,walls,wallsSol,dispAx,dispRad (0=off,1=on)
+1,1,0,1,0,2				:axial,walls,wallsSol,dispAx,dispRad (0=off,1=on)
 1,1				:Nusselt scaling factor,viscous dissipation
 1    				:Tinprofile (1=box,2=file)
 290,300,290,290,290		:Tcold,Thot,Tf0,Ts0,Tw0
@@ -14,5 +14,5 @@
 'props/fluidProps.txt',1,1,1,1	:fluid properties,nTkf,nTrhof,nTcf,nTmuf
 'props/solidProps.txt',1,1,1	:solid properties,nTks,nTrhos,nTcs
 'props/wallProps.txt',1,1,1	:Wall properties,nTkw,nTrhow,nTcw
-2				:blow mode(1=singleblow,2=periodic)
+1				:blow mode(1=singleblow,2=periodic)
 1e-5,1000			:relative tolerance,max iterations

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "SingBlow2DSolver_1", "SingBlow2DSolver_1.vfproj", "{D08DEB67-42AB-44A8-90C4-95D7C3B88429}"
 EndProject
 Global
